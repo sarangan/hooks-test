@@ -1,25 +1,50 @@
-import React from 'react';
-import logo from './logo.svg';
+import React , {useReducer, useEffect, useRef} from 'react';
 import './App.css';
+import TodoForm from "./components/TodoForm";
+import TodoList from "./components/TodoList";
+import {myTodosContext} from "./TodoContext";
+import reducer from "./reducer";
+
+
+function useEffectOnce(cb){
+  const didRun = useRef(false);
+  
+  useEffect(() => {    
+    if(!didRun.current){
+      cb();
+      didRun.current = true;
+    }
+  }); 
+
+}
 
 function App() {
+
+  const [state, dispatch] = useReducer(reducer, []);
+
+  useEffectOnce(() => {
+      const totos = JSON.parse(localStorage.getItem('todo')) || [];
+      dispatch({type: 'LOAD', payload: totos  });
+  });
+
+  // useEffect(() => {
+  //   const totos = JSON.parse(localStorage.getItem('todo')) || [];
+  //   dispatch({type: 'LOAD', payload: totos  });   
+  // }, []);
+  
+  useEffect(() => {
+    localStorage.setItem('todo', JSON.stringify(state) )
+  }, [state])
+
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <myTodosContext.Provider value={{ state, dispatch }} >
+      <div className="App">
+        <TodoForm />
+        <TodoList list={state}/>
+      </div>
+    </myTodosContext.Provider>
+    
   );
 }
 
